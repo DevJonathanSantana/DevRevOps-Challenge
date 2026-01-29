@@ -1,0 +1,116 @@
+﻿@page "/"
+@using REVOPS.DevChallenge.Context.Entities
+@using REVOPS.DevChallenge.Services
+@using REVOPS.DevChallenge.Components 
+@inject IChatService _chatService 
+
+<PageTitle>DevRevOps - Consulta de Chat</PageTitle>
+
+<div class="position-absolute top-0 end-0 p-4">
+    <REVOPS.DevChallenge.Components.ThemeToggler />
+</div>
+
+<div class="container py-5">
+    <div class="text-center mb-5">
+        <h1 class="fw-bold text-primary"> 🖥️ Consulta de Atendimento</h1>
+        <p class="text-muted">Insira o ID do chat para obter métricas detalhadas.</p>
+    </div>
+
+    <div class="row justify-content-center mb-5">
+        <div class="col-lg-6 col-md-8">
+            <div class="card p-2 shadow-sm border-0 bg-body">
+                <form @onsubmit="HandleSearch" class="d-flex gap-2">
+                    <InputText class="form-control border-0 shadow-none ps-3" placeholder="Cole o ID do chat..." @bind-Value="chatId" />
+                    <button type="submit" class="btn btn-primary px-4 fw-bold rounded-3">BUSCAR</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            @if (isLoading)
+            {
+                <div class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            }
+            else if (errorMessage != null)
+            {
+                <div class="alert alert-danger shadow-sm">@errorMessage</div>
+            }
+            else if (chatNotFound)
+            {
+                <div class="alert alert-warning text-center shadow-sm">Nenhum chat encontrado.</div>
+            }
+            else if (chatInfo != null)
+            {
+                <ChatDetailsCard ChatInfo="chatInfo" />
+            }
+        </div>
+    </div>
+
+    @if (historicoChats != null && historicoChats.Any())
+    {
+        <div class="row justify-content-center mt-5">
+            <div class="col-lg-8">
+                <h5 class="text-muted mb-3"> Histórico de Pesquisas Recentes</h5>
+                <div class="list-group shadow-sm">
+                    @foreach (var chat in historicoChats)
+                    {
+                        <div class="list-group-item list-group-item-action d-flex justify-content-between align-items-center" aria-current="true">
+                            <div>
+                                <div class="d-flex w-100 justify-content-between">
+                                    <h6 class="mb-1 fw-bold">@chat.ContactName</h6>
+                                </div>
+                                <p class="mb-1 small text-muted">@chat.Sector - @chat.AgentName</p>
+                                <small class="text-muted">ID: @chat.ChatId</small>
+                            </div>
+                            <span class="badge @(chat.IsAnyAttendantAssigned ? "bg-success" : "bg-warning text-body") rounded-pill">
+                                @(chat.IsAnyAttendantAssigned ? "Em Atendimento" : "Fila")
+                            </span>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+    }
+</div>
+
+@code {
+    string? chatId;
+    ChatInfo? chatInfo;
+    List<ChatInfo>? historicoChats;
+    bool isLoading = false;
+    bool chatNotFound = false;
+    string? errorMessage = null;
+
+    protected override async Task OnInitializedAsync()
+    {
+    
+        historicoChats = await _chatService.ObterHistoricoAsync();
+    }
+
+    async Task HandleSearch()
+    {
+        if (string.IsNullOrWhiteSpace(chatId)) return;
+        isLoading = true; errorMessage = null; chatNotFound = false; chatInfo = null;
+        try
+        {
+            chatInfo = await _chatService.BuscarEProcessarChat(chatId);
+            if (chatInfo == null) 
+            {
+                chatNotFound = true;
+            }
+            else 
+            {
+                
+                historicoChats = await _chatService.ObterHistoricoAsync();
+            }
+        }
+        catch (Exception ex) { errorMessage = $"Erro técnico: {ex.Message}"; }
+        finally { isLoading = false; }
+    }
+
+    
+}

@@ -1,0 +1,133 @@
+@using REVOPS.DevChallenge.Context.Entities
+
+@if (ChatInfo != null)
+{
+    <div class="card border-0 shadow-lg overflow-hidden rounded-4 mb-4">
+        <div class="card-header border-0 py-3 text-white d-flex justify-content-between align-items-center @(ChatInfo.IsAnyAttendantAssigned ? "bg-success bg-gradient" : "bg-warning bg-gradient")">
+            <div class="d-flex align-items-center gap-2">
+                <span class="fw-bold">@(ChatInfo.IsAnyAttendantAssigned ? "Em Atendimento" : "Aguardando Fila")</span>
+            </div>
+            <span class="badge bg-white bg-opacity-25 text-white">@ChatInfo.ChatId</span>
+        </div>
+
+        <div class="card-body p-4">
+            <div class="row g-4">
+                <div class="col-md-6 border-end">
+                    <h6 class="text-uppercase text-muted fw-bold mb-3 small">Operacional</h6>
+                    
+                    <div class="mb-3">
+                        <div class="d-flex align-items-center gap-2 mb-1">
+                            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-headset text-secondary" viewBox="0 0 16 16">
+                                <path d="M8 1a5 5 0 0 0-5 5v1h1a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V6a6 6 0 1 1 12 0v6a2.5 2.5 0 0 1-2.5 2.5H9.366a1 1 0 0 1-.866.5h-1a1 1 0 1 1 0-2h1a1 1 0 0 1 .866.5H11.5A1.5 1.5 0 0 0 13 12h-1a1 1 0 0 1-1-1V8a1 1 0 0 1 1-1h1V6a5 5 0 0 0-5-5z"/>
+                                <path d="M9 6a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm3 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm-9 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2zm3 0a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/>
+                                <path d="M6 3a3 3 0 1 1-6 0 3 3 0 0 1 6 0zm-3 4.5a1.5 1.5 0 0 0 1.182.574.502.502 0 1 0 0-1 .502.502 0 0 0 0 1A1.5 1.5 0 0 0 3 7.5z"/>
+                            </svg>
+                            <label class="text-secondary small fw-bold">Atendente Responsável</label>
+                        </div>
+                        
+                        <div class="d-flex align-items-center mt-1">
+                            <div class="bg-body-secondary rounded-circle p-2 me-2">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="gray" class="bi bi-person-fill" viewBox="0 0 16 16"><path d="M3 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1H3Zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6Z"/></svg>
+                            </div>
+                            <div>
+                                @if (!string.IsNullOrEmpty(ChatInfo.AgentName))
+                                {
+                                    <span class="fw-bold text-body-emphasis d-block">@ChatInfo.AgentName</span>
+                                }
+                                else
+                                {
+                                    <span class="text-muted fst-italic">-- Não atribuído --</span>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="text-secondary small">Setor</label>
+                        <div class="fw-semibold text-body-emphasis fs-5">@(ChatInfo.Sector ?? "Geral")</div>
+                    </div>
+                </div>
+
+                <div class="col-md-6 ps-md-4">
+                    <h6 class="text-uppercase text-muted fw-bold mb-3 small">Cliente</h6>
+                    <div class="mb-3">
+                        <h4 class="mb-0 fw-bold">@ChatInfo.ContactName</h4>
+                        <span class="text-muted">@ChatInfo.ContactEmail</span>
+                    </div>
+                    <div>
+                        @if(!string.IsNullOrEmpty(ChatInfo.Tags) && ChatInfo.Tags != "Sem etiquetas")
+                        {
+                            var tags = ChatInfo.Tags.Split(',');
+                            foreach(var tag in tags) { <span class="badge rounded-pill bg-info text-dark bg-opacity-25 me-1">@tag.Trim()</span> }
+                        }
+                        else { <span class="text-muted fst-italic small">Nenhuma etiqueta</span> }
+                    </div>
+                </div>
+            </div> <hr class="my-4 opacity-10">
+
+            <div class="bg-body-tertiary bg-opacity-50 p-3 rounded-3 border border-light-subtle">
+                <div class="d-flex align-items-center justify-content-between">
+                    <div>
+                        <h6 class="mb-1 fw-bold text-secondary">Tempo sem resposta</h6>
+                        <small class="text-muted">Última interação: @ChatInfo.LastActivityAt.AddHours(-3).ToString("dd/MM/yyyy HH:mm")</small>
+                    </div>
+                    
+                    <div class="text-end">
+                        <h3 class="mb-0 fw-bold @(GetTempoEspera().TotalHours >= 2 ? "text-danger" : "text-success")">
+                            @GetTempoEsperaFormatado()
+                        </h3>
+                        
+                        <div class="d-flex align-items-center justify-content-end gap-2 mt-1">
+                            @if (GetTempoEspera().TotalHours >= 2)
+                            {
+                                <img src="icons/icone-alerta-vermelho.png" alt="Alerta" style="height: 20px; width: auto;" />
+                                <small class="text-danger fw-semibold">Atenção: Espera longa detectada</small>
+                            }
+                            else
+                            {
+                                <img src="icons/icone-sucesso-verde.png" alt="Sucesso" style="height: 20px; width: auto;" />
+                                <small class="text-success fw-semibold">Tempo dentro do SLA</small>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public ChatInfo? ChatInfo { get; set; }
+
+    private TimeSpan GetTempoEspera()
+    {
+        if (ChatInfo == null) return TimeSpan.Zero;
+        return DateTime.UtcNow - ChatInfo.LastActivityAt;
+    }
+
+    private string GetTempoEsperaFormatado()
+    {
+        var t = GetTempoEspera();
+        if (t.TotalSeconds < 0) return "Agora mesmo";
+
+        if (t.TotalDays > 365)
+        {
+            int anos = (int)(t.TotalDays / 365);
+            int meses = (int)((t.TotalDays % 365) / 30);
+            return $"{anos} {(anos == 1 ? "ano" : "anos")} e {meses} {(meses == 1 ? "mês" : "meses")}";
+        }
+        if (t.TotalDays > 30)
+        {
+            int meses = (int)(t.TotalDays / 30);
+            int dias = (int)(t.TotalDays % 30);
+            return $"{meses} {(meses == 1 ? "mês" : "meses")} e {dias} {(dias == 1 ? "dia" : "dias")}";
+        }
+        if (t.TotalDays >= 1)
+        {
+            return $"{(int)t.TotalDays} {((int)t.TotalDays == 1 ? "dia" : "dias")} e {t.Hours} h";
+        }
+        return $"{t.Hours} h {t.Minutes} min";
+    }
+}

@@ -1,4 +1,4 @@
-#  DevRevOps Challenge 
+#  RevOps Challenge 
 
 Aplicação desenvolvida para análise detalhada de atendimentos via chat, fornecendo métricas de SLA, identificação de atendentes e histórico de consultas.
 
@@ -66,3 +66,4 @@ dotnet ef database update
 
 # 3. Execute a aplicação
 dotnet run
+

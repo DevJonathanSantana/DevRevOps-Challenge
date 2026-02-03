@@ -55,7 +55,7 @@ Abaixo, detalho as decisões técnicas e funcionalidades adicionadas para elevar
 
 **Pré-requisitos:**
 * .NET SDK (Versão 8 ou superior recomendada)
-* Token de API do Talk configurado no `appsettings.json`.
+* Token de API do Talk configurado no `appsettings.json`. Por motivos de segurança não foi compartilhado já com a Token, precisa Inserir a sua. *
 
 ```bash
 # 1. Clone o repositório
@@ -66,4 +66,5 @@ dotnet ef database update
 
 # 3. Execute a aplicação
 dotnet run
+
 
